@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from .api.ai import router as ai_router
 from .api.backtests import router as backtests_router
 from .api.cache import router as cache_router
 from .api.meta import router as meta_router
@@ -66,7 +67,7 @@ def health() -> dict:
 
 
 for router in (stocks_router, cache_router, settings_router, meta_router,
-               strategies_router, backtests_router):
+               strategies_router, backtests_router, ai_router):
     app.include_router(router, prefix="/api")
 
 

@@ -558,5 +558,7 @@ var conditionBuilder = (function () {
     render: render,
     getDsl: getDsl,
     setDsl: setDsl,
+    // 白名单只从这里出去，别的模块不许自己硬编码指标表（红线 6）
+    meta: function () { return { indicators: indicators, operators: operators }; },
   };
 })();

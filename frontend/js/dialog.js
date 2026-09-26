@@ -87,7 +87,7 @@ var dialog = (function () {
     });
   }
 
-  function warn(title, body, onOk) {
+  function warn(title, body, onOk, okText) {
     var mask = document.createElement("div");
     mask.className = "dialog-mask";
 
@@ -115,7 +115,7 @@ var dialog = (function () {
     var okBtn = document.createElement("button");
     okBtn.type = "button";
     okBtn.className = "btn btn-primary";
-    okBtn.textContent = "我知道了";
+    okBtn.textContent = okText || "我知道了";
     okBtn.addEventListener("click", function () {
       mask.remove();
       if (typeof onOk === "function") onOk();

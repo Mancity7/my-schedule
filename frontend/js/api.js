@@ -2,9 +2,10 @@
 var api = (function () {
   var TIMEOUT = 30000;
 
-  function request(method, path, body) {
+  function request(method, path, body, timeoutMs) {
     var ctrl = new AbortController();
-    var timer = setTimeout(function () { ctrl.abort(); }, TIMEOUT);
+    var ms = timeoutMs || TIMEOUT;
+    var timer = setTimeout(function () { ctrl.abort(); }, ms);
 
     var opts = {
       method: method,
@@ -40,7 +41,7 @@ var api = (function () {
     }).catch(function (e) {
       clearTimeout(timer);
       if (e && e.name === "AbortError") {
-        var timeoutErr = { kind: "datasource", code: "TIMEOUT", message: "请求超时（30秒），可能被限流", retriable: true };
+        var timeoutErr = { kind: "datasource", code: "TIMEOUT", message: "请求超时（" + Math.round(ms / 1000) + "秒），可能被限流", retriable: true };
         toast.err(timeoutErr.message);
         return Promise.reject(timeoutErr);
       }
@@ -74,7 +75,7 @@ var api = (function () {
 
   return {
     get: function (path) { return request("GET", path); },
-    post: function (path, body) { return request("POST", path, body); },
+    post: function (path, body, timeoutMs) { return request("POST", path, body, timeoutMs); },
     put: function (path, body) { return request("PUT", path, body); },
     del: function (path) { return request("DELETE", path); },
     _handleError: _handleError,

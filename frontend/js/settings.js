@@ -21,7 +21,7 @@
     trade: "交易费用",
     metric: "绩效参数",
     data: "数据设置",
-    ai: "AI 设置（V2）",
+    ai: "AI 设置",
   };
   var UNITS = {
     commission_rate: "（如 0.00025 = 万2.5）",
@@ -128,6 +128,8 @@
         section.appendChild(row);
       });
 
+      if (gk === "ai") section.appendChild(buildAiTestRow(values));
+
       el.appendChild(section);
     });
 
@@ -147,6 +149,66 @@
         });
       });
     });
+  }
+
+  function buildAiTestRow(values) {
+    var wrap = document.createElement("div");
+    wrap.style.marginTop = "12px";
+
+    var hint = document.createElement("p");
+    hint.className = "muted";
+    hint.style.fontSize = "12px";
+    hint.style.lineHeight = "1.7";
+    hint.innerHTML =
+      "Key 在 <b>platform.deepseek.com</b> 开通账号后，到「API Keys」里创建，充值 5 元够用很久。<br>" +
+      "填好后点下面的按钮真的发一次请求验证，不是只看有没有填字。<br>" +
+      "Key 只存在你自己电脑的数据库里，导出设置时会自动排除。";
+    wrap.appendChild(hint);
+
+    var bar = document.createElement("div");
+    bar.style.display = "flex";
+    bar.style.alignItems = "center";
+    bar.style.gap = "10px";
+    bar.style.marginTop = "8px";
+    bar.style.flexWrap = "wrap";
+
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn btn-secondary";
+    btn.id = "ai-test-btn";
+    btn.textContent = "测试 AI 连通性";
+    bar.appendChild(btn);
+
+    var status = document.createElement("span");
+    status.id = "ai-test-status";
+    status.className = "muted";
+    status.style.fontSize = "13px";
+    status.textContent = values && values.deepseek_api_key === "***" ? "已填 Key，未测试" : "未填 Key";
+    bar.appendChild(status);
+
+    wrap.appendChild(bar);
+
+    btn.addEventListener("click", function () {
+      btn.disabled = true;
+      btn.textContent = "测试中...";
+      status.className = "muted";
+      status.textContent = "正在请求 DeepSeek，最多等 60 秒";
+      api.post("/api/ai/test", null, 65000).then(function (data) {
+        status.className = "";
+        status.style.color = data.ok ? "var(--ok)" : "var(--err)";
+        status.textContent = data.message;
+        if (data.ok) toast.ok("AI 连通正常");
+      }).catch(function (err) {
+        status.className = "";
+        status.style.color = "var(--err)";
+        status.textContent = (err && err.message) || "测试失败";
+      }).then(function () {
+        btn.disabled = false;
+        btn.textContent = "测试 AI 连通性";
+      });
+    });
+
+    return wrap;
   }
 
   function saveField(key, value, inputEl) {
