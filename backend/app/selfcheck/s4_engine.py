@@ -38,6 +38,11 @@ FEE = {
 
 INITIAL_CASH = 100000.0
 
+# 真能触发止损的一段K线：第 2 根开盘买入成交在 10.01（含滑点），止损价 9.01，
+# 第 3 根最低 8.9 打穿它。别用 bar(9.0) 这种一字板去造下跌 —— 那是跌停封死，
+# 走的是另一条分支，止损压根轮不到，测试会"通过"但其实什么都没验。
+STOP_LOSS_BARS = [bar(10.0), bar(10.0), bar(9.5, o=10.0, h=10.0, l=8.9)]
+
 
 def I(name, *args, mult=None):
     op = {"t": "ind", "name": name, "args": list(args)}
@@ -135,7 +140,7 @@ def t05_f1_simple_buy_and_sell():
     eq(result.status, "done", "回测完成")
     true(len(result.trades) >= 2, "至少有买入和卖出")
     buy_trade = next((t for t in result.trades if t["side"] == "buy"), None)
-    sell_trade = next((t for t in result.trades if t["side"] == "sell" and t["reason"] == "signal"), None)
+    sell_trade = next((t for t in result.trades if t["side"] == "sell" and t["kind"] == "signal"), None)
     true(buy_trade is not None, "有买入")
     true(sell_trade is not None, "有卖出")
     true(buy_trade["shares"] % LOT == 0, "买入整手")
@@ -153,7 +158,7 @@ def t06_f4_t_plus_1_no_same_day_sell():
     result = run_engine(bars, dsl)
     buy_trade = next((t for t in result.trades if t["side"] == "buy"), None)
     true(buy_trade is not None, "有买入")
-    sell_trades = [t for t in result.trades if t["side"] == "sell" and t["reason"] == "signal"]
+    sell_trades = [t for t in result.trades if t["side"] == "sell" and t["kind"] == "signal"]
     eq(len(sell_trades), 0, "当日不能卖出（T+1）")
 
 
@@ -180,7 +185,7 @@ def t08_f3_one_word_limit_down_cannot_sell():
     result = run_engine(bars, dsl)
     buy_trade = next((t for t in result.trades if t["side"] == "buy"), None)
     true(buy_trade is not None, "第 1 根买入")
-    sell_trades = [t for t in result.trades if t["side"] == "sell" and t["reason"] == "signal"]
+    sell_trades = [t for t in result.trades if t["side"] == "sell" and t["kind"] == "signal"]
     eq(len(sell_trades), 0, "跌停封死卖不出")
 
 
@@ -191,8 +196,9 @@ def t09_f5_buy_must_be_round_lot():
     dsl = dsl_of(buy=G(C(I("CLOSE"), ">", N(5))))
     result = run_engine(bars, dsl, initial_cash=1050.0)
     buy_trade = next((t for t in result.trades if t["side"] == "buy"), None)
-    if buy_trade:
-        eq(buy_trade["shares"] % LOT, 0, "买入整手")
+    # 不能写 if buy_trade: —— 买不进时这条会安静地"通过"，F5 就等于没测
+    true(buy_trade is not None, "资金够买一手，应该买得进")
+    eq(buy_trade["shares"] % LOT, 0, "买入整手")
 
 
 # ================================================================== 风控
@@ -209,7 +215,7 @@ def t10_f6_stop_loss_at_trigger_price_no_slippage():
     result = run_engine(bars, dsl)
     buy_trade = next((t for t in result.trades if t["side"] == "buy"), None)
     true(buy_trade is not None, "买入")
-    stop_trades = [t for t in result.trades if t["reason"] and "止损" in t["reason"]]
+    stop_trades = [t for t in result.trades if t["kind"] == "stop_loss"]
     true(len(stop_trades) > 0, "触发了止损")
     stop_trade = stop_trades[0]
     cost_price = buy_trade["price"]
@@ -228,7 +234,7 @@ def t11_f7_take_profit_at_trigger_price():
     result = run_engine(bars, dsl)
     buy_trade = next((t for t in result.trades if t["side"] == "buy"), None)
     true(buy_trade is not None, "买入")
-    tp_trades = [t for t in result.trades if t["reason"] and "止盈" in t["reason"]]
+    tp_trades = [t for t in result.trades if t["kind"] == "take_profit"]
     true(len(tp_trades) > 0, "触发了止盈")
 
 
@@ -243,7 +249,7 @@ def t12_f8_trailing_stop_from_high():
     result = run_engine(bars, dsl)
     buy_trade = next((t for t in result.trades if t["side"] == "buy"), None)
     true(buy_trade is not None, "买入")
-    trail_trades = [t for t in result.trades if t["reason"] and "移动止损" in t["reason"]]
+    trail_trades = [t for t in result.trades if t["kind"] == "trailing_stop"]
     true(len(trail_trades) > 0, "触发了移动止损")
 
 
@@ -258,8 +264,12 @@ def t13_f9_max_hold_days_exits_next_open():
     result = run_engine(bars, dsl)
     buy_trade = next((t for t in result.trades if t["side"] == "buy"), None)
     true(buy_trade is not None, "买入")
-    max_hold_trades = [t for t in result.trades if t["reason"] and "最长持有" in str(t.get("reason", ""))]
-    true(len(max_hold_trades) > 0 or len(result.trades) >= 2, "最长持有触发或正常卖出")
+    max_hold_trades = [t for t in result.trades if t["kind"] == "max_hold"]
+    # 原先写的是「触发 or 交易数 >= 2」，那个 or 让它不管怎样都能过
+    sells = [t for t in result.trades if t["side"] == "sell"]
+    true(len(sells) >= 1, "拿满天数应触发到期卖出")
+    eq({t["kind"] for t in sells}, {"max_hold"}, "没有卖出条件，卖出只可能是到期离场")
+    true("最长持有" in max_hold_trades[0]["reason"], "reason 要说明是到期卖出")
 
 
 # ================================================================== F10 会计恒等式
@@ -417,14 +427,14 @@ def t24_no_sell_signal_no_sell_trade():
     bars = level(5, 10.0) + level(5, 12.0)
     dsl = dsl_of(buy=G(C(I("CLOSE"), ">", N(5))))
     result = run_engine(bars, dsl)
-    sell_trades = [t for t in result.trades if t["side"] == "sell" and t["reason"] == "signal"]
+    sell_trades = [t for t in result.trades if t["side"] == "sell" and t["kind"] == "signal"]
     eq(len(sell_trades), 0, "没有卖出条件就没有信号卖出")
 
 
 @check("4")
 def t25_risk_exit_no_slippage():
     """风控成交不叠加滑点（F8/F9）。"""
-    bars = [bar(10.0), bar(9.0), bar(8.5)]
+    bars = STOP_LOSS_BARS
     dsl = dsl_of(
         buy=G(C(I("CLOSE"), ">", N(5))),
         risk={"stop_loss_pct": 10},
@@ -432,8 +442,45 @@ def t25_risk_exit_no_slippage():
     result = run_engine(bars, dsl)
     buy_trade = next((t for t in result.trades if t["side"] == "buy"), None)
     true(buy_trade is not None, "买入")
-    stop_trades = [t for t in result.trades if t["reason"] and "止损" in t["reason"]]
-    if stop_trades:
-        cost_price = buy_trade["price"]
-        trigger = round_money(cost_price * 0.9)
-        near(stop_trades[0]["price"], trigger, 0.01, "止损价无滑点")
+    stop_trades = [t for t in result.trades if t["kind"] == "stop_loss"]
+    # 这里不能写 if stop_trades: —— 那样止损根本没触发时也会"通过"（F8/F9 就白测了）
+    eq(len(stop_trades), 1, "止损应正好触发一笔卖出")
+    cost_price = buy_trade["price"]
+    trigger = round_money(cost_price * 0.9)
+    near(stop_trades[0]["price"], trigger, 0.001, "止损价 = 触发价，不叠加滑点")
+    eq(stop_trades[0]["price"], round_money(trigger), "成交价应正好等于止损触发价")
+
+
+@check("4")
+def t26_trade_kind_separates_signal_from_risk_exit():
+    """每笔交易都带机器可读的 kind，reason 只负责给人看。
+
+    这条是上面几个过滤器的地基。它们原先比对 `reason == "signal"`，可交易明细改成
+    人话之后那个字面量再也不会出现，过滤结果恒为空 —— 「有卖出」会失败，而
+    「没有卖出」会假通过，F3（跌停卖不出）、F4（T+1）等于根本没在测。
+    """
+    # 信号卖出：涨跌各 5 根，中间的跳变根会被涨跌停挡住，成交落在后面那根
+    result = run_engine(level(5, 3.0) + level(5, 6.0) + level(5, 3.0),
+                        dsl_of(buy=G(C(I("CLOSE"), ">", N(5))),
+                               sell=G(C(I("CLOSE"), "<", N(4)))))
+    sells = [t for t in result.trades if t["side"] == "sell"]
+    eq(len(sells), 1, "应正好有一笔信号卖出")
+    eq(sells[0]["kind"], "signal", "信号卖出的 kind")
+    true(bool(sells[0]["reason"]) and sells[0]["reason"] != "signal",
+         "reason 要写成人话，不是代码")
+
+    # 风控卖出：止损
+    result = run_engine(STOP_LOSS_BARS,
+                        dsl_of(buy=G(C(I("CLOSE"), ">", N(5))), risk={"stop_loss_pct": 10}))
+    sells = [t for t in result.trades if t["side"] == "sell"]
+    eq(len(sells), 1, "止损应产生一笔卖出")
+    eq(sells[0]["kind"], "stop_loss", "止损卖出的 kind")
+    true("止损" in sells[0]["reason"], "止损卖出的 reason 要说明是止损")
+
+    # 最长持有走的是信号成交路径，但它属于风控离场，不能被算成 signal
+    result = run_engine(level(8, 10.0),
+                        dsl_of(buy=G(C(I("CLOSE"), ">", N(5))), risk={"max_hold_days": 3}))
+    sells = [t for t in result.trades if t["side"] == "sell"]
+    eq(len(sells), 1, "拿满天数应有一笔卖出")
+    eq(sells[0]["kind"], "max_hold", "最长持有的 kind")
+    true("最长持有" in sells[0]["reason"], "最长持有的 reason 要说明是到期")

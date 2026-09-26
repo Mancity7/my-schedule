@@ -267,7 +267,8 @@ class _Runner:
                                 "跌停封死，卖不出"
                         else:
                             self.pending = {"side": "sell", "ts": ts, "idx": i,
-                                            "reason": f"最长持有 {max_hold} 天"}
+                                            "reason": f"最长持有 {max_hold} 天",
+                                            "kind": "max_hold"}
                             signal_entry["action"] = "pending_max_hold_sell"
 
             if buy_fire:
@@ -348,7 +349,7 @@ class _Runner:
                                                self._eval_result.nodes, bar_idx)
             self.trades.append({
                 "side": "buy", "ts": ts, "idx": i, "price": price, "shares": shares,
-                "amount": cost, "fees": fees, "reason": reason,
+                "amount": cost, "fees": fees, "reason": reason, "kind": "signal",
                 "from_ts": p["ts"],
             })
             signal_entry["action"] = "filled_buy"
@@ -376,6 +377,9 @@ class _Runner:
             self.trades.append({
                 "side": "sell", "ts": ts, "idx": i, "price": price, "shares": shares,
                 "amount": amount, "fees": fees, "pnl": pnl, "reason": reason,
+                # reason 是给人看的话术，kind 才是给程序判的口径。
+                # 最长持有走的是这条成交路径，但它是风控离场，得跟着 pending 带过来。
+                "kind": p.get("kind") or "signal",
                 "from_ts": p["ts"],
             })
             signal_entry["action"] = "filled_sell"
@@ -394,18 +398,21 @@ class _Runner:
 
         trigger_price = None
         reason = ""
+        kind = ""
 
         if stop_loss is not None:
             stop_price = round_money(cost_price * (1.0 - stop_loss / 100.0))
             if l <= stop_price:
                 trigger_price = stop_price
                 reason = f"止损 {stop_loss}%"
+                kind = "stop_loss"
 
         if trigger_price is None and take_profit is not None:
             tp_price = round_money(cost_price * (1.0 + take_profit / 100.0))
             if h >= tp_price:
                 trigger_price = tp_price
                 reason = f"止盈 {take_profit}%"
+                kind = "take_profit"
 
         if trigger_price is None and trailing is not None:
             high_since = self.account.high_since_buy
@@ -413,6 +420,7 @@ class _Runner:
             if l <= trail_price:
                 trigger_price = trail_price
                 reason = f"移动止损 {trailing}%"
+                kind = "trailing_stop"
 
         if trigger_price is not None:
             shares = self.account.shares
@@ -430,7 +438,7 @@ class _Runner:
             self.trades.append({
                 "side": "sell", "ts": ts, "idx": i, "price": trigger_price,
                 "shares": shares, "amount": amount, "fees": fees, "pnl": pnl,
-                "reason": reason, "from_ts": self.account.buy_ts,
+                "reason": reason, "kind": kind, "from_ts": self.account.buy_ts,
             })
             signal_entry["action"] = f"risk_sell:{reason}"
 
