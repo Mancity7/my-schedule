@@ -32,6 +32,7 @@
 .btn-secondary { background: var(--panel); color: var(--text); }
 .btn-sm { padding: 4px 10px; font-size: 12px; }
 .btn-ghost { border: none; background: transparent; }
+.btn-incomplete { opacity: 0.5; cursor: not-allowed; }
 .btn-ghost:hover { background: #f0f1f3; }
 
 /* ── 输入 ── */
@@ -336,3 +337,13 @@ label.field .field-label { display: block; font-size: 13px; color: var(--muted);
 .quality-bar.ok { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
 .quality-bar.warn { background: var(--warn-bg); color: #92400e; border: 1px solid #fcd34d; }
 .quality-bar.err { background: var(--err-bg); color: #991b1b; border: 1px solid #fca5a5; }
+
+/* ── 区域高亮（验证引导） ── */
+@keyframes section-highlight {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+  25%, 75% { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.3); }
+}
+.section-highlight {
+  animation: section-highlight 1.5s ease-in-out;
+  border-color: var(--err) !important;
+}

@@ -211,7 +211,7 @@
     var btn = document.getElementById("run-btn");
     if (btn) {
       var canRun = name && codes.length > 0 && dsl && dsl.signals && dsl.signals.buy && dsl.signals.buy.items.length > 0;
-      btn.disabled = !canRun;
+      btn.classList.toggle("btn-incomplete", !canRun);
     }
   }
 
@@ -224,9 +224,62 @@
     document.addEventListener("keydown", function (e) {
       if (e.ctrlKey && e.key === "Enter") {
         e.preventDefault();
-        if (!btn.disabled) _submit();
+        _submit();
       }
     });
+  }
+
+  /* ── 验证并返回缺失项 ── */
+  function _validate(name, dsl, codes, startDate, endDate) {
+    if (!name) {
+      return { field: "策略名称", section: "section-strategy", hint: "请先给策略起个名字" };
+    }
+    if (!codes.length) {
+      return { field: "股票", section: "section-stock", hint: "请至少选择一只股票" };
+    }
+    if (!dsl || !dsl.signals || !dsl.signals.buy || !dsl.signals.buy.items.length) {
+      return { field: "买入条件", section: "section-strategy", hint: "请至少设置一条买入条件" };
+    }
+    if (!startDate) {
+      return { field: "开始日期", section: "section-params", hint: "请填写开始日期" };
+    }
+    if (!endDate) {
+      return { field: "结束日期", section: "section-params", hint: "请填写结束日期" };
+    }
+    return null;
+  }
+
+  /* ── 显示缺失提示并引导 ── */
+  function _showMissingDialog(missing) {
+    // 显示对话框
+    dialog.warn(
+      "无法运行",
+      "你尚未添加「" + missing.field + "」，导致无法运行。\n\n" + missing.hint,
+      function () {
+        // 点击确定后滚动到对应区域
+        _scrollToSection(missing.section);
+      }
+    );
+  }
+
+  /* ── 滚动到指定区域并高亮 ── */
+  function _scrollToSection(sectionId) {
+    var section = document.getElementById(sectionId);
+    if (!section) return;
+
+    // 滚动到该区域
+    section.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    // 添加高亮效果
+    section.classList.remove("section-highlight");
+    // 强制重排以重新触发动画
+    void section.offsetWidth;
+    section.classList.add("section-highlight");
+
+    // 1.5秒后移除高亮类
+    setTimeout(function () {
+      section.classList.remove("section-highlight");
+    }, 1500);
   }
 
   function _submit() {
@@ -237,14 +290,12 @@
     var startDate = (document.getElementById("start-date") || {}).value || "";
     var endDate = (document.getElementById("end-date") || {}).value || "";
 
-    if (!name) { toast.warn("请先给策略起个名字"); return; }
-    if (!codes.length) { toast.warn("请至少选择一只股票（点击「选股」添加）"); return; }
-    if (!dsl || !dsl.signals || !dsl.signals.buy || !dsl.signals.buy.items.length) {
-      toast.warn("请至少设置一条买入条件");
+    // 验证并返回缺失项
+    var missing = _validate(name, dsl, codes, startDate, endDate);
+    if (missing) {
+      _showMissingDialog(missing);
       return;
     }
-    if (!startDate) { toast.warn("请填写「开始日期」"); return; }
-    if (!endDate) { toast.warn("请填写「结束日期」"); return; }
 
     api.post("/api/strategies", {
       name: name,

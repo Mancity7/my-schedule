@@ -87,5 +87,66 @@ var dialog = (function () {
     });
   }
 
-  return { confirm: confirm };
+  function warn(title, body, onOk) {
+    var mask = document.createElement("div");
+    mask.className = "dialog-mask";
+
+    var dlg = document.createElement("div");
+    dlg.className = "dialog";
+    dlg.setAttribute("role", "alertdialog");
+    dlg.setAttribute("aria-modal", "true");
+
+    var h = document.createElement("h3");
+    h.className = "dialog-title";
+    h.textContent = title || "提示";
+    dlg.appendChild(h);
+
+    if (body) {
+      var p = document.createElement("p");
+      p.className = "dialog-body";
+      p.style.whiteSpace = "pre-line";
+      p.textContent = body;
+      dlg.appendChild(p);
+    }
+
+    var actions = document.createElement("div");
+    actions.className = "dialog-actions";
+
+    var okBtn = document.createElement("button");
+    okBtn.type = "button";
+    okBtn.className = "btn btn-primary";
+    okBtn.textContent = "我知道了";
+    okBtn.addEventListener("click", function () {
+      mask.remove();
+      if (typeof onOk === "function") onOk();
+    });
+
+    actions.appendChild(okBtn);
+    dlg.appendChild(actions);
+
+    mask.appendChild(dlg);
+    document.body.appendChild(mask);
+
+    okBtn.focus();
+
+    function onKey(e) {
+      if (e.key === "Escape" || e.key === "Enter") {
+        e.preventDefault();
+        mask.remove();
+        document.removeEventListener("keydown", onKey);
+        if (typeof onOk === "function") onOk();
+      }
+    }
+    document.addEventListener("keydown", onKey);
+
+    mask.addEventListener("click", function (e) {
+      if (e.target === mask) {
+        mask.remove();
+        document.removeEventListener("keydown", onKey);
+        if (typeof onOk === "function") onOk();
+      }
+    });
+  }
+
+  return { confirm: confirm, warn: warn };
 })();

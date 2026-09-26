@@ -27,7 +27,7 @@
   <section class="main-col">
 
     <!-- ① 我的策略 -->
-    <div class="card">
+    <div class="card" id="section-strategy">
       <h2>① 我的策略</h2>
       <label class="field" style="margin-bottom:8px">
         <span class="field-label">策略名称</span>
@@ -49,13 +49,13 @@
     </div>
 
     <!-- ② 选股票 -->
-    <div class="card">
+    <div class="card" id="section-stock">
       <h2>② 选股票</h2>
       <div id="stock-picker-area"></div>
     </div>
 
     <!-- ③ 选模式和参数 -->
-    <div class="card">
+    <div class="card" id="section-params">
       <h2>③ 选模式和参数</h2>
       <div class="tabs" style="margin-bottom:12px">
         <button class="tab mode-tab active" data-mode="backtest">历史回测 ✓</button>
@@ -101,7 +101,7 @@
       <h3>确认面板</h3>
       <div id="confirm-panel-body"></div>
       <div style="margin-top:16px">
-        <button id="run-btn" class="btn btn-primary" style="width:100%" disabled>开始回测</button>
+        <button id="run-btn" class="btn btn-primary btn-incomplete" style="width:100%">开始回测</button>
         <p class="muted" style="font-size:11px;margin-top:6px;text-align:center">Ctrl + Enter 快捷提交</p>
       </div>
     </div>
