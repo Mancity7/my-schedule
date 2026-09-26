@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>设置 · A股策略验证系统</title>
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/components.css">
+<link rel="stylesheet" href="/css/pages.css">
+</head>
+<body>
+
+<header class="topnav">
+  <span class="brand">A股策略验证</span>
+  <nav>
+    <a href="/">建策略</a>
+    <a href="/tasks.html">我的任务</a>
+    <a href="/settings.html" class="active">设置</a>
+  </nav>
+  <span class="spacer"></span>
+  <span id="datasource-light" class="muted" title="数据源状态">
+    <i class="dot unknown"></i>数据源：未测试
+  </span>
+</header>
+
+<main style="max-width:800px;margin:0 auto;padding:var(--gap) 20px 48px">
+
+  <div id="settings-container">
+    <div class="muted">加载中...</div>
+  </div>
+
+  <div class="card" style="margin-top:var(--gap)">
+    <h2>数据源测试</h2>
+    <div id="datasource-results"></div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+      <button id="test-all" class="btn btn-primary" type="button">测试全部数据源</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:var(--gap)">
+    <h2>数据管理</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button id="clear-cache" class="btn btn-secondary" type="button">清空行情缓存</button>
+      <button id="export-all" class="btn btn-secondary" type="button">导出全部数据</button>
+    </div>
+    <p class="muted" style="margin-top:8px;font-size:12px">清空缓存不影响策略和回测记录，只是下次回测需要重新下载行情。</p>
+  </div>
+
+</main>
+
+<footer class="disclaimer">
+  基于历史数据模拟，不代表未来收益，不构成投资建议
+</footer>
+
+<script src="/js/vendor/echarts.min.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/format.js"></script>
+<script src="/js/toast.js"></script>
+<script src="/js/dialog.js"></script>
+<script src="/js/termtip.js"></script>
+<script src="/js/charts.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/settings.js"></script>
+</body>
+</html>

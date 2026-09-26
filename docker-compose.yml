@@ -1,0 +1,16 @@
+services:
+  app:
+    build: ./backend
+    container_name: astock-quant
+    # 只绑 127.0.0.1：系统没有登录功能，这样同一 WiFi 下的其他设备无法访问
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./frontend:/app/frontend:ro
+    environment:
+      - TZ=Asia/Shanghai
+      - PYTHONUNBUFFERED=1
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped

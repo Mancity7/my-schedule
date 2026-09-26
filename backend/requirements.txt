@@ -1,0 +1,8 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pandas==2.2.3
+numpy==2.2.1
+akshare==1.18.97
+baostock==0.8.9
+pypinyin==0.53.0
+httpx==0.28.1

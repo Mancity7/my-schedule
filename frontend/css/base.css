@@ -1,0 +1,128 @@
+/* 全局变量与基础排版。红涨绿跌是A股习惯，与西方相反，不要改。 */
+
+:root {
+  --up: #d93026;        /* 涨 / 盈利 / 买入 */
+  --down: #0a8f5b;      /* 跌 / 亏损 / 卖出 */
+  --flat: #6b7280;
+
+  --bg: #f5f6f8;
+  --panel: #ffffff;
+  --line: #e3e6ea;
+  --text: #1f2430;
+  --muted: #6b7280;
+
+  --ok: #0a8f5b;
+  --warn: #b45309;
+  --warn-bg: #fff7ed;
+  --err: #d93026;
+  --err-bg: #fef2f2;
+  --info: #2563eb;
+
+  --radius: 10px;
+  --gap: 16px;
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+
+  --mono: ui-monospace, "Cascadia Mono", Consolas, "Courier New", monospace;
+  --sans: "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+h1, h2, h3 { margin: 0 0 8px; font-weight: 600; line-height: 1.35; }
+h1 { font-size: 20px; }
+h2 { font-size: 16px; }
+h3 { font-size: 14px; }
+
+a { color: var(--info); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* 涨跌色永远和符号一起出现，不只靠颜色（验收 I13 / 色盲可用） */
+.up { color: var(--up); }
+.down { color: var(--down); }
+.flat { color: var(--flat); }
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--gap);
+}
+
+.muted { color: var(--muted); }
+.mono { font-family: var(--mono); }
+
+:focus-visible { outline: 2px solid var(--info); outline-offset: 2px; }
+
+/* 阶段 0 的骨架样式，阶段 5 会换成 components.css */
+.topnav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 20px;
+  height: 52px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.topnav .brand { font-weight: 700; }
+.topnav nav { display: flex; gap: 4px; }
+.topnav nav a {
+  padding: 6px 12px;
+  border-radius: 8px;
+  color: var(--text);
+}
+.topnav nav a.active { background: #eef2ff; color: var(--info); }
+.topnav .spacer { flex: 1; }
+
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+.dot.unknown { background: var(--flat); }
+.dot.ok { background: var(--ok); }
+.dot.err { background: var(--err); }
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: var(--gap);
+  padding: var(--gap) 20px 48px;
+  max-width: 1440px;
+  margin: 0 auto;
+  align-items: start;
+}
+.layout .side { position: sticky; top: 68px; }
+.placeholder {
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  padding: 28px;
+  text-align: center;
+  color: var(--muted);
+  background: var(--panel);
+}
+
+.footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 24px 16px 40px;
+  border-top: 1px solid var(--line);
+  margin-top: 24px;
+}
+
+@media (max-width: 1023px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .layout .side { position: static; }
+}

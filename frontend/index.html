@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>建策略 · A股策略验证系统</title>
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/components.css">
+<link rel="stylesheet" href="/css/pages.css">
+</head>
+<body class="page-index">
+
+<header class="topnav">
+  <span class="brand">A股策略验证</span>
+  <nav>
+    <a href="/" class="active">建策略</a>
+    <a href="/tasks.html">我的任务</a>
+    <a href="/settings.html">设置</a>
+  </nav>
+  <span class="spacer"></span>
+  <span id="datasource-light" class="muted" title="数据源状态">
+    <i class="dot unknown"></i>数据源：未测试
+  </span>
+</header>
+
+<main class="layout">
+  <section class="main-col">
+
+    <!-- ① 我的策略 -->
+    <div class="card">
+      <h2>① 我的策略</h2>
+      <label class="field" style="margin-bottom:8px">
+        <span class="field-label">策略名称</span>
+        <input type="text" id="strategy-name" class="input" placeholder="给策略起个名字" maxlength="40">
+      </label>
+      <div class="tabs strategy-tabs">
+        <button class="tab active" data-mode="manual">手动搭条件 ✓</button>
+        <button class="tab" data-mode="template">从模板选 ✓</button>
+        <button class="tab" data-mode="nl">用大白话 <span class="lock">🔒</span></button>
+      </div>
+
+      <div id="manual-panel">
+        <div id="condition-area"></div>
+      </div>
+
+      <div id="template-panel" style="display:none">
+        <div id="template-list"></div>
+      </div>
+    </div>
+
+    <!-- ② 选股票 -->
+    <div class="card">
+      <h2>② 选股票</h2>
+      <div id="stock-picker-area"></div>
+    </div>
+
+    <!-- ③ 选模式和参数 -->
+    <div class="card">
+      <h2>③ 选模式和参数</h2>
+      <div class="tabs" style="margin-bottom:12px">
+        <button class="tab mode-tab active" data-mode="backtest">历史回测 ✓</button>
+        <button class="tab mode-tab" data-mode="realtime">实时模拟 <span class="lock">🔒</span></button>
+        <button class="tab mode-tab" data-mode="sentiment">情绪分析 <span class="lock">🔒</span></button>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:end">
+        <label class="field" style="margin-bottom:0;flex:0 0 auto">
+          <span class="field-label">周期</span>
+          <select id="period-select" class="input" style="width:100px">
+            <option value="daily">日线</option>
+            <option value="weekly">周线</option>
+            <option value="monthly">月线</option>
+          </select>
+        </label>
+        <label class="field" style="margin-bottom:0;flex:1;min-width:120px">
+          <span class="field-label">开始日期</span>
+          <input type="date" id="start-date" class="input">
+        </label>
+        <label class="field" style="margin-bottom:0;flex:1;min-width:120px">
+          <span class="field-label">结束日期</span>
+          <input type="date" id="end-date" class="input">
+        </label>
+      </div>
+    </div>
+
+    <!-- 预检 -->
+    <div class="card">
+      <h2>预检</h2>
+      <div id="preflight-area"></div>
+    </div>
+
+    <!-- 最近运行 -->
+    <div class="card recent-runs-card">
+      <h2>最近运行</h2>
+      <div id="recent-runs"></div>
+    </div>
+
+  </section>
+
+  <aside class="side">
+    <div class="card confirm-panel">
+      <h3>确认面板</h3>
+      <div id="confirm-panel-body"></div>
+      <div style="margin-top:16px">
+        <button id="run-btn" class="btn btn-primary" style="width:100%" disabled>开始回测</button>
+        <p class="muted" style="font-size:11px;margin-top:6px;text-align:center">Ctrl + Enter 快捷提交</p>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<footer class="disclaimer">
+  基于历史数据模拟，不代表未来收益，不构成投资建议
+</footer>
+
+<script src="/js/vendor/echarts.min.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/format.js"></script>
+<script src="/js/toast.js"></script>
+<script src="/js/dialog.js"></script>
+<script src="/js/termtip.js"></script>
+<script src="/js/charts.js"></script>
+<script src="/js/condition.js"></script>
+<script src="/js/stockpicker.js"></script>
+<script src="/js/preflight.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/index.js"></script>
+</body>
+</html>

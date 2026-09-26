@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>回测结果 · A股策略验证系统</title>
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/components.css">
+<link rel="stylesheet" href="/css/pages.css">
+</head>
+<body class="page-backtest">
+
+<header class="topnav">
+  <span class="brand">A股策略验证</span>
+  <nav>
+    <a href="/">建策略</a>
+    <a href="/tasks.html">我的任务</a>
+    <a href="/settings.html">设置</a>
+  </nav>
+  <span class="spacer"></span>
+  <span id="datasource-light" class="muted" title="数据源状态">
+    <i class="dot unknown"></i>数据源：未测试
+  </span>
+</header>
+
+<main style="max-width:1440px;margin:0 auto;padding:var(--gap) 20px 48px">
+
+  <div id="breadcrumb" class="breadcrumb">
+    <a href="/">首页</a> <span class="sep">›</span> <span id="bc-strategy">加载中...</span>
+  </div>
+
+  <!-- 股票标签 -->
+  <div id="stock-tabs" class="stock-tabs"></div>
+
+  <!-- 数据质量条 -->
+  <div id="quality-bar" class="quality-bar ok" style="display:none"></div>
+
+  <!-- 指标卡区 -->
+  <div class="card">
+    <h2>绩效指标</h2>
+    <div id="metric-grid" class="metric-grid"></div>
+  </div>
+
+  <!-- 主图 -->
+  <div class="card" style="margin-top:var(--gap)">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap">
+      <h2 style="margin:0">K 线图</h2>
+      <div style="display:flex;gap:8px;align-items:center;font-size:12px">
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
+          <input type="checkbox" id="ma5-overlay"> MA5
+        </label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
+          <input type="checkbox" id="ma10-overlay"> MA10
+        </label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
+          <input type="checkbox" id="ma20-overlay" checked> MA20
+        </label>
+      </div>
+      <button id="reset-zoom" class="btn btn-sm btn-ghost" type="button">重置缩放</button>
+    </div>
+    <div id="main-chart" style="height:420px"></div>
+  </div>
+
+  <!-- 副图 -->
+  <div class="card" style="margin-top:var(--gap)">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <h2 style="margin:0">副图</h2>
+      <div class="tabs" style="margin:0;border:none" id="sub-tabs">
+        <button class="tab active" data-sub="volume">成交量</button>
+        <button class="tab" data-sub="macd">MACD</button>
+        <button class="tab" data-sub="rsi">RSI</button>
+        <button class="tab" data-sub="kdj">KDJ</button>
+        <button class="tab" data-sub="boll">BOLL</button>
+      </div>
+    </div>
+    <div id="sub-chart" style="height:200px"></div>
+  </div>
+
+  <!-- 收益曲线 -->
+  <div class="card" style="margin-top:var(--gap)">
+    <h2>收益曲线</h2>
+    <div id="equity-chart" style="height:260px"></div>
+  </div>
+
+  <!-- 交易明细 -->
+  <div class="card" style="margin-top:var(--gap)">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+      <h2 style="margin:0">交易明细</h2>
+      <button id="export-csv" class="btn btn-sm btn-secondary" type="button">导出 CSV</button>
+      <button id="rerun-btn" class="btn btn-sm btn-secondary" type="button">重跑</button>
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl" id="trades-table">
+        <thead>
+          <tr>
+            <th>日期</th>
+            <th>方向</th>
+            <th class="num">价格</th>
+            <th class="num">数量</th>
+            <th class="num">金额</th>
+            <th class="num">手续费</th>
+            <th>原因</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="trades-body"></tbody>
+        <tfoot id="trades-foot"></tfoot>
+      </table>
+    </div>
+    <div id="trades-pager" class="pager"></div>
+  </div>
+
+</main>
+
+<footer class="disclaimer">
+  基于历史数据模拟，不代表未来收益，不构成投资建议
+</footer>
+
+<script src="/js/vendor/echarts.min.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/format.js"></script>
+<script src="/js/toast.js"></script>
+<script src="/js/dialog.js"></script>
+<script src="/js/termtip.js"></script>
+<script src="/js/charts.js"></script>
+<script src="/js/trace.js"></script>
+<script src="/js/compare.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/backtest.js"></script>
+</body>
+</html>

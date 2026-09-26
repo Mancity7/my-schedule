@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>我的任务 · A股策略验证系统</title>
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/components.css">
+<link rel="stylesheet" href="/css/pages.css">
+</head>
+<body>
+
+<header class="topnav">
+  <span class="brand">A股策略验证</span>
+  <nav>
+    <a href="/">建策略</a>
+    <a href="/tasks.html" class="active">我的任务</a>
+    <a href="/settings.html">设置</a>
+  </nav>
+  <span class="spacer"></span>
+  <span id="datasource-light" class="muted" title="数据源状态">
+    <i class="dot unknown"></i>数据源：未测试
+  </span>
+</header>
+
+<main style="max-width:1200px;margin:0 auto;padding:var(--gap) 20px 48px">
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <h2 style="margin:0">我的任务</h2>
+      <button id="compare-btn" class="btn btn-sm btn-secondary" type="button" disabled>横向对比选中</button>
+      <span class="spacer"></span>
+      <button id="refresh-btn" class="btn btn-sm btn-ghost" type="button">刷新</button>
+    </div>
+    <div id="task-list" class="task-list">
+      <div class="muted">加载中...</div>
+    </div>
+  </div>
+</main>
+
+<footer class="disclaimer">
+  基于历史数据模拟，不代表未来收益，不构成投资建议
+</footer>
+
+<script src="/js/vendor/echarts.min.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/format.js"></script>
+<script src="/js/toast.js"></script>
+<script src="/js/dialog.js"></script>
+<script src="/js/termtip.js"></script>
+<script src="/js/charts.js"></script>
+<script src="/js/compare.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/tasks.js"></script>
+</body>
+</html>
