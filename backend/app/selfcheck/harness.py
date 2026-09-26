@@ -24,6 +24,9 @@ VOLUME_DIR = os.environ.get("DATA_DIR", "/app/data")
 _SCRATCH = Path(VOLUME_DIR) / "selfcheck"
 _SCRATCH.mkdir(parents=True, exist_ok=True)
 os.environ["DATA_DIR"] = str(_SCRATCH)
+# 自检里绝不能让后台定时器跑起来：它会去联网取行情，把"离线也能自检"这条前提破坏掉。
+# 阶段 12 会显式调用结算函数，需要联网的地方一律打桩。
+os.environ["SIM_SCHEDULER"] = "off"
 for _f in _SCRATCH.glob("quant.db*"):
     _f.unlink(missing_ok=True)
 
@@ -158,11 +161,12 @@ STAGE_MODULES = {
     "9": "s9_smoke",
     "10": "s10_v2",
     "11": "s11_glass",
+    "12": "s12_sim",
 }
 
 # 已交付的阶段。每完成一个开发阶段就把编号追加进来。
 # "all" 只跑这里列出的阶段；请求一个未列出的阶段会直接报错，不会被悄悄跳过。
-DELIVERED = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"]
+DELIVERED = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]
 
 
 def main(argv: list[str]) -> int:

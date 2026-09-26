@@ -16,11 +16,13 @@ from .api.backtests import router as backtests_router
 from .api.cache import router as cache_router
 from .api.meta import router as meta_router
 from .api.settings import router as settings_router
+from .api.sim import router as sim_router
 from .api.stocks import router as stocks_router
 from .api.strategies import router as strategies_router
 from .config import APP_VERSION, FRONTEND_DIR
 from .db import init_db, now
 from .errors import KIND_INPUT, KIND_PROGRAM, AppError, program_error
+from .sim import start_scheduler, stop_scheduler
 
 log = logging.getLogger("app")
 logging.basicConfig(
@@ -32,7 +34,11 @@ logging.basicConfig(
 async def _lifespan(_app: FastAPI):
     init_db()
     log.info("数据库就绪 %s", now())
+    # 模拟盘的兜底结算。用户不打开页面时靠它把账跟上；自检里用 SIM_SCHEDULER=off 关掉，
+    # 否则自检会偷偷联网取行情。
+    start_scheduler()
     yield
+    stop_scheduler()
 
 
 app = FastAPI(
@@ -67,7 +73,7 @@ def health() -> dict:
 
 
 for router in (stocks_router, cache_router, settings_router, meta_router,
-               strategies_router, backtests_router, ai_router):
+               strategies_router, backtests_router, sim_router, ai_router):
     app.include_router(router, prefix="/api")
 
 

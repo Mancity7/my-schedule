@@ -324,6 +324,18 @@ def _eval_node(node: dict, df: pd.DataFrame, cache: dict, path: str, out: list) 
     return series
 
 
+def warmup_bars(dsl: dict) -> int:
+    """这份 DSL 需要多少根历史K线才能算出指标（取所有指标里最长的暖机）。
+
+    实时模拟靠它决定取数窗口：只取要结算的那几根，MA60 这类长周期指标全是 NaN，
+    每一天都会被记成「数据不足·跳过」，账户永远不动 —— 而且看起来不像出错。
+    """
+    n = 0
+    for name, args in _iter_indicators(dsl):
+        n = max(n, ind.warmup(name, args))
+    return n
+
+
 def evaluate(dsl: dict, df: pd.DataFrame) -> EvalResult:
     """把校验过的 DSL 在一段K线上跑出来。dsl 必须先过 validate()。"""
     signals = dsl.get("signals") if isinstance(dsl, dict) else None
@@ -338,9 +350,7 @@ def evaluate(dsl: dict, df: pd.DataFrame) -> EvalResult:
                           pd.DataFrame(index=[] if df is None else df.index), [], 0)
 
     cache: dict[str, pd.Series] = {}
-    warmup = 0
-    for name, args in _iter_indicators(dsl):
-        warmup = max(warmup, ind.warmup(name, args))
+    warmup = warmup_bars(dsl)
 
     nodes: list[dict] = []
     buy_codes = _eval_node(dsl["signals"]["buy"], df, cache, "signals.buy", nodes)

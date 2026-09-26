@@ -143,6 +143,90 @@ CREATE TABLE IF NOT EXISTS trade_calendar (
     updated_at  TEXT
 );
 
+-- ---------------------------------------------------------------- 实时模拟盘
+-- 一只股票一个账户、独立 10 万资金、全仓进出 —— 和回测同口径，两边数字才可比。
+-- dsl 与 fee_snapshot 都是**创建时的快照**：之后改策略、改费率都不追溯已有账户，
+-- 否则账户中途换规则，前面攒下来的盈亏就成了两套逻辑拼出来的，没法解释。
+CREATE TABLE IF NOT EXISTS sim_account (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    strategy_id   INTEGER NOT NULL,
+    strategy_name TEXT,
+    code          TEXT NOT NULL,
+    name          TEXT,
+    period        TEXT NOT NULL DEFAULT 'daily',
+    initial_cash  REAL NOT NULL,
+    dsl           TEXT NOT NULL,           -- JSON 快照
+    fee_snapshot  TEXT NOT NULL,           -- JSON 快照
+    status        TEXT NOT NULL DEFAULT 'running',  -- running / paused / closed
+    start_date    TEXT NOT NULL,           -- 从哪天开始跟踪（含）
+    settled_to    TEXT,                    -- 结算游标：已经处理到哪根K线
+    state         TEXT,                    -- JSON 撮合状态（现金/持仓/委托/持有天数）
+    last_error    TEXT,
+    created_at    TEXT,
+    updated_at    TEXT
+);
+-- 同一策略+同一股票只允许一个在跑的账户。平仓/暂停后可以重建，所以是部分索引。
+CREATE UNIQUE INDEX IF NOT EXISTS uq_sim_running
+    ON sim_account(strategy_id, code) WHERE status = 'running';
+
+-- 模拟盘成交。字段与回测的 trades 一一对应，前端可以用同一套渲染。
+CREATE TABLE IF NOT EXISTS sim_trade (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_id  INTEGER NOT NULL,
+    ts          TEXT NOT NULL,        -- 成交日
+    from_ts     TEXT,                 -- 产生这笔委托的信号日
+    side        TEXT NOT NULL,        -- buy / sell
+    kind        TEXT NOT NULL,        -- signal / stop_loss / take_profit / trailing_stop / max_hold
+    price       REAL, shares INTEGER, amount REAL, pnl REAL,
+    fees        TEXT,                 -- JSON
+    reason      TEXT,
+    settled_at  TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_sim_trade_acct ON sim_trade(account_id, ts);
+
+-- 每日结算后的资产快照。主键含 ts，重算同一天是覆盖而不是追加（幂等的关键之一）。
+CREATE TABLE IF NOT EXISTS sim_equity (
+    account_id  INTEGER NOT NULL,
+    ts          TEXT NOT NULL,
+    close       REAL,
+    cash        REAL,
+    position    REAL,
+    equity      REAL,
+    day_pnl     REAL,                 -- 相对上一交易日资产的变化
+    day_pnl_pct REAL,
+    PRIMARY KEY (account_id, ts)
+);
+
+-- 信号日志。**被拒绝的信号也要记**：PRD 场景里"当日跌停封死，信号顺延到下一交易日"
+-- 这句话就出自这张表的 skip_reason，不写下来用户只会觉得"怎么没卖出去"。
+CREATE TABLE IF NOT EXISTS sim_signal (
+    account_id  INTEGER NOT NULL,
+    ts          TEXT NOT NULL,
+    buy         INTEGER NOT NULL DEFAULT 0,
+    sell        INTEGER NOT NULL DEFAULT 0,
+    insufficient INTEGER NOT NULL DEFAULT 0,
+    action      TEXT,
+    skip_reason TEXT,
+    settled_at  TEXT,
+    PRIMARY KEY (account_id, ts)
+);
+
+-- 结算批次。谁触发的、补了哪几天、成没成，全记下来。
+-- 幂等恢复靠它对账：游标只在整批成功后才推进，中途崩了下次重跑同一段。
+CREATE TABLE IF NOT EXISTS sim_settlement (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_id  INTEGER NOT NULL,
+    trigger     TEXT NOT NULL,        -- create / manual / schedule
+    from_ts     TEXT,                 -- 本次处理的第一根（含）
+    to_ts       TEXT,                 -- 本次处理的最后一根（含）
+    bars        INTEGER NOT NULL DEFAULT 0,
+    trades      INTEGER NOT NULL DEFAULT 0,
+    status      TEXT NOT NULL DEFAULT 'ok',   -- ok / idle / error
+    message     TEXT,
+    created_at  TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_sim_settle_acct ON sim_settlement(account_id, id);
+
 -- 新闻与情绪（V3）
 CREATE TABLE IF NOT EXISTS news (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
