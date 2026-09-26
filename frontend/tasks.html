@@ -7,6 +7,15 @@
 <link rel="stylesheet" href="/css/base.css">
 <link rel="stylesheet" href="/css/components.css">
 <link rel="stylesheet" href="/css/pages.css">
+<script>
+/* 主题要在首次绘制前定下来，不然深色用户会先闪一下白屏。
+   这里只读本地存的偏好，不发请求；真正的事件绑定在 js/app.js。 */
+(function () {
+  var t = "auto";
+  try { t = localStorage.getItem("theme") || "auto"; } catch (e) {}
+  if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+})();
+</script>
 </head>
 <body>
 
@@ -21,6 +30,11 @@
   <span id="datasource-light" class="muted" title="数据源状态">
     <i class="dot unknown"></i>数据源：未测试
   </span>
+  <div class="theme-switch" id="theme-switch" role="group" aria-label="外观">
+    <button type="button" data-theme-choice="auto" class="active" aria-pressed="true">自动</button>
+    <button type="button" data-theme-choice="light" aria-pressed="false">浅色</button>
+    <button type="button" data-theme-choice="dark" aria-pressed="false">深色</button>
+  </div>
 </header>
 
 <main style="max-width:1200px;margin:0 auto;padding:var(--gap) 20px 48px">

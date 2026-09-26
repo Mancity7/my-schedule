@@ -118,7 +118,7 @@
     banner.id = "nl-gate-banner";
     banner.className = "muted";
     banner.style.cssText = "font-size:13px;padding:8px 10px;background:var(--warn-bg);" +
-      "color:var(--warn);border-radius:6px;display:none";
+      "color:var(--warn);border-radius:var(--radius-sm);display:none";
     banner.textContent = "还没有配置 DeepSeek API Key，去「设置」页填一下就能用（充值 5 元够用很久）。" +
       "没填也不影响「手动搭条件」和「从模板选」，这两个不用联网。";
     container.appendChild(banner);
@@ -190,7 +190,7 @@
       nlParsed = null;
       result.innerHTML = "";
       var box = document.createElement("div");
-      box.style.cssText = "padding:10px 12px;border-radius:6px;background:var(--err-bg);" +
+      box.style.cssText = "padding:10px 13px;border-radius:var(--radius-sm);background:var(--err-bg);" +
         "color:var(--err);font-size:13px";
       box.textContent = (err && err.message) || "解析失败，请重试";
       result.appendChild(box);
@@ -235,12 +235,12 @@
       }
       var row = document.createElement("div");
       row.style.cssText = "display:flex;gap:8px;align-items:center;flex-wrap:wrap;" +
-        "padding:6px 8px;margin:4px 0 4px " + (depth * 16) + "px;background:#f8fafc;border-radius:6px";
+        "padding:6px 10px;margin:4px 0 4px " + (depth * 16) + "px;background:var(--panel-sunken);border-radius:var(--radius-sm)";
       [["左", _opLabel(item.left)], ["", _cmpLabel(item.cmp)], ["右", _opLabel(item.right)]]
         .forEach(function (pair) {
           var chip = document.createElement("span");
-          chip.style.cssText = "font-size:13px;padding:2px 8px;border-radius:4px;" +
-            (pair[0] ? "background:#fff;border:1px solid #e5e7eb" : "color:var(--muted)");
+          chip.style.cssText = "font-size:13px;padding:2px 9px;border-radius:var(--radius-pill);" +
+            (pair[0] ? "background:var(--panel-solid);border:1px solid var(--line)" : "color:var(--muted)");
           chip.textContent = pair[1];
           row.appendChild(chip);
         });
@@ -268,7 +268,7 @@
 
     var card = document.createElement("div");
     card.className = "card";
-    card.style.cssText = "padding:14px;background:#fff";
+    card.style.cssText = "padding:14px;background:var(--panel-solid)";
 
     var head = document.createElement("div");
     head.style.cssText = "font-weight:600;margin-bottom:4px";
@@ -297,7 +297,7 @@
       card.appendChild(_section("风控"));
       ex.risk_lines.forEach(function (line) {
         var p = document.createElement("div");
-        p.style.cssText = "font-size:13px;padding:3px 8px;margin:3px 0;background:#f8fafc;border-radius:6px";
+        p.style.cssText = "font-size:13px;padding:4px 10px;margin:3px 0;background:var(--panel-sunken);border-radius:var(--radius-sm)";
         p.textContent = line;
         card.appendChild(p);
       });
